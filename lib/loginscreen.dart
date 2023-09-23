@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -73,27 +74,79 @@ class _LoginScreenState extends State<LoginScreen> {
                   customField("Masukan NIM kamu", idController, false),
                   fieldTitle("Masukan password"),
                   customPasswordField("Masukan password kamu", passController),
+
                   // Gunakan customPasswordField
-                  Container(
-                    height: 60,
-                    width: screenWidth,
-                    margin: EdgeInsets.only(top: screenHeight / 40),
-                    decoration: BoxDecoration(
-                      color: primary,
-                      borderRadius: BorderRadius.all(Radius.circular(20)),
-                    ),
-                    child: Center(
-                      child: Text(
-                        "LOGIN",
-                        style: TextStyle(
-                          fontFamily: "font_2",
-                          fontSize: screenWidth / 26,
-                          color: Colors.white,
-                          letterSpacing: 2,
+              GestureDetector(
+                onTap: () async {
+
+                  String id = idController.text.trim(); // Mengambil nilai ID sebagai string
+                  String password = passController.text.trim(); // Mengambil password sebagai string
+
+                  if (id.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text("NIM tidak boleh kosong"),
+                    ));
+                  } else if (password.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text("Password tidak boleh kosong"),
+                    ));
+                  } else {
+                    QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection("NIM").where('id', isEqualTo: id).get();
+
+                    print("Database Firebase terpanggil: ${querySnapshot.docs.length}");
+
+                  // Cetak data dari setiap dokumen
+                    for (var document in querySnapshot.docs) {
+                      print("ID: ${document['id']}, Password: ${document['password']}");
+                    }
+
+                    if (querySnapshot.docs.isNotEmpty) {
+                      try {
+                        var firstDocumentData = querySnapshot.docs[0].data() as Map<String, dynamic> ;
+                        var hashedPasswordFromDatabase = firstDocumentData['password'];
+
+                        if (password == hashedPasswordFromDatabase) {
+                          print("Password cocok, lanjutkan");
+                          // Lakukan tindakan lanjutan setelah autentikasi berhasil
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                            content: Text("Periksa kembali password kamu"),
+                          ));
+                        }
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text("Terjadi kesalahan: ${e.toString()}"),
+                        ));
+                      }
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text("Data tidak ditemukan"),
+                      ));
+                    }
+                  }
+                },
+
+              child: Container(
+                      height: 60,
+                      width: screenWidth,
+                      margin: EdgeInsets.only(top: screenHeight / 40),
+                      decoration: BoxDecoration(
+                        color: primary,
+                        borderRadius: BorderRadius.all(Radius.circular(20)),
+                      ),
+                      child: Center(
+                        child: Text(
+                          "LOGIN",
+                          style: TextStyle(
+                            fontFamily: "font_2",
+                            fontSize: screenWidth / 26,
+                            color: Colors.white,
+                            letterSpacing: 2,
+                          ),
                         ),
                       ),
                     ),
-                  )
+                  ),
                 ],
               ),
             ),

@@ -1,5 +1,7 @@
+import 'package:absensi_simulasi_mmtc_20/homescreen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -15,6 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
   double screenWidth = 0;
 
   Color primary = Color(0xFF176B87);
+  late SharedPreferences sharedPreferences;
   bool obscure = true; // Untuk mengontrol visibilitas password
 
   @override
@@ -107,7 +110,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         if (password == hashedPasswordFromDatabase) {
                           print("Password cocok, lanjutkan");
-                          // Lakukan tindakan lanjutan setelah autentikasi berhasil
+
+                          sharedPreferences = await SharedPreferences.getInstance();
+                          sharedPreferences.setString("NimId", id).then((_){
+                            Navigator.pushReplacement(context,
+                                MaterialPageRoute(builder: (context) => HomeScreen())); // pindah navigasi ke homescreen
+                          });
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                             content: Text("Periksa kembali password kamu"),
@@ -120,7 +128,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       }
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text("Data tidak ditemukan"),
+                        content: Text("Periksa lagi Nim kamu"),
                       ));
                     }
                   }

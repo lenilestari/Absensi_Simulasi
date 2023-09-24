@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:absensi_simulasi_mmtc_20/model/user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:intl/intl.dart';
 import 'package:slide_to_act/slide_to_act.dart';
 
@@ -20,12 +21,22 @@ class _TodayScreenState extends State<TodayScreen> {
   String checkIn = "--/--";
   String checkOut = "--/--";
 
+  String location = " ";
+
   Color primary = Color(0xFF176B87);
 
   @override
   void initState() {
     super.initState();
     _getRecord();
+  }
+
+  void _getLocation() async {
+    List<Placemark> placemark = await placemarkFromCoordinates(User.lat, User.long);
+
+    setState(() {
+      location = "${placemark[0].street}, ${placemark[0].administrativeArea}, ${placemark[0].postalCode}, ${placemark[0].country}";
+    });
   }
 
   void _getRecord() async {
@@ -204,7 +215,7 @@ class _TodayScreenState extends State<TodayScreen> {
               }
             ),
             checkOut == "--/--" ? Container(
-              margin: const EdgeInsets.only(top : 20),
+              margin: const EdgeInsets.only(top : 20, bottom: 12),
               child: Builder(
                 builder: (context) {
                   final GlobalKey<SlideActionState> key = GlobalKey();
@@ -230,6 +241,10 @@ class _TodayScreenState extends State<TodayScreen> {
                     //
                     // });
 
+                    if (User.lat != 0) {
+                      _getLocation();
+
+
                       print(DateFormat('hh:mm').format(DateTime.now()));
 
                       QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection("NIM").where('id', isEqualTo: User.usernameId).get();
@@ -253,7 +268,9 @@ class _TodayScreenState extends State<TodayScreen> {
                             .doc(DateFormat('dd MMMM yyyy').format(DateTime.now())).update({
                           'date' : Timestamp.now(),
                           'checkIn' : checkIn,
-                          'checkOut' : DateFormat('hh:mm').format(DateTime.now())
+                          'checkOut' : DateFormat('hh:mm').format(DateTime.now()),
+                          'location' : location,
+
                         });
 
                       } catch (e) {
@@ -266,21 +283,73 @@ class _TodayScreenState extends State<TodayScreen> {
                           'date' : Timestamp.now(),
                           'checkIn' : DateFormat('hh:mm').format(DateTime.now()),
                           'checkOut' : "--/--",
+                          'location' : location,
                         });
                       }
 
+                      print("Database Firebase terpanggil: ${querySnapshot.docs.length}");
                       key.currentState!.reset();
-                      
+
                       // print(querySnapshot2['checkIn']);
 
-                      print("Database Firebase terpanggil: ${querySnapshot.docs.length}");
+                    } else {
+                      Timer (Duration(seconds: 3), () async {
+                        _getLocation();
+
+
+                        print(DateFormat('hh:mm').format(DateTime.now()));
+
+                        QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection("NIM").where('id', isEqualTo: User.usernameId).get();
+
+                        print(querySnapshot.docs[0].id);
+                        print(DateFormat('dd MMMM yyyy').format(DateTime.now()));
+
+                        DocumentSnapshot querySnapshot2 = await FirebaseFirestore.instance.collection("NIM").doc(querySnapshot.docs[0].id).collection("Record")
+                            .doc(DateFormat('dd MMMM yyyy').format(DateTime.now()))
+                            .get();
+
+                        try {
+                          // if(querySnapshot2['checkIn']);
+                          String checkIn = querySnapshot2['checkIn'];
+
+                          setState(() {
+                            checkOut = DateFormat('hh:mm').format(DateTime.now());
+                          });
+
+                          await FirebaseFirestore.instance.collection("NIM").doc(querySnapshot.docs[0].id).collection("Record")
+                              .doc(DateFormat('dd MMMM yyyy').format(DateTime.now())).update({
+                            'date' : Timestamp.now(),
+                            'checkIn' : checkIn,
+                            'checkOut' : DateFormat('hh:mm').format(DateTime.now()),
+                            'location' : location,
+
+                          });
+
+                        } catch (e) {
+
+                          setState(() {
+                            checkIn = DateFormat('hh:mm').format(DateTime.now());
+                          });
+                          await FirebaseFirestore.instance.collection("NIM").doc(querySnapshot.docs[0].id).collection("Record")
+                              .doc(DateFormat('dd MMMM yyyy').format(DateTime.now())).set({
+                            'date' : Timestamp.now(),
+                            'checkIn' : DateFormat('hh:mm').format(DateTime.now()),
+                            'checkOut' : "--/--",
+                            'location' : location,
+                          });
+                        }
+
+                        print("Database Firebase terpanggil: ${querySnapshot.docs.length}");
+                        key.currentState!.reset();
+                      });
+                    }
 
                   // key.currentState!.reset();
                   });
                 },
               ),
             ) : Container(
-              margin: const EdgeInsets.only(top: 30),
+              margin: const EdgeInsets.only(top: 30, bottom: 30),
               child: Text("You have completed this day",
                 style: TextStyle(
                   fontFamily: "font_2",
@@ -289,7 +358,10 @@ class _TodayScreenState extends State<TodayScreen> {
                 ),
               ),
 
-            )
+            ),
+            location != " " ? Text(
+              "Location : " + location,
+            ) : const SizedBox(),
           ],
         ),
       ),

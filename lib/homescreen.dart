@@ -1,5 +1,6 @@
 import 'package:absensi_simulasi_mmtc_20/model/user.dart';
 import 'package:absensi_simulasi_mmtc_20/profilescreen.dart';
+import 'package:absensi_simulasi_mmtc_20/services/location_services.dart';
 import 'package:absensi_simulasi_mmtc_20/todayscreen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -33,7 +34,26 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
 
+    _startLocationServices();
+
     getId();
+  }
+
+  void _startLocationServices() async {
+    LocationServices().initialize();
+
+    LocationServices().getLongitude().then((value) {
+      setState(() {
+        User.long = value!;
+
+      });
+
+      LocationServices().getLatitude().then((value){
+        setState(() {
+          User.lat = value!;
+        });
+      });
+    });
   }
 
   void getId() async {

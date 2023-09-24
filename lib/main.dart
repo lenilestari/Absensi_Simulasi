@@ -1,5 +1,6 @@
 import 'package:absensi_simulasi_mmtc_20/homescreen.dart';
 import 'package:absensi_simulasi_mmtc_20/loginscreen.dart';
+import 'package:absensi_simulasi_mmtc_20/model/user.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
@@ -56,7 +57,11 @@ class _AuthCheckState extends State<AuthCheck> {
 
     try {
       if(sharedPreferences.getString('NimId') != null) {
+        setState(() {
+
+          User.username = sharedPreferences.getString('NimId')!;
         userAvailable = true;
+        });
       }
     } catch(e) {
       setState(() {

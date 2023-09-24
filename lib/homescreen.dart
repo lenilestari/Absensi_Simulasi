@@ -18,7 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Color primary = Color(0xFF176B87);
 
-  int currentIndex = 0;
+  int currentIndex = 1;
 
   List<IconData> navigationIcons = [
     FontAwesomeIcons.calendar,

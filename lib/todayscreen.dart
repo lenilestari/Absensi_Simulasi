@@ -1,4 +1,9 @@
+import 'dart:async';
+
+import 'package:absensi_simulasi_mmtc_20/model/user.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:slide_to_act/slide_to_act.dart';
 
 class TodayScreen extends StatefulWidget {
@@ -11,7 +16,40 @@ class TodayScreen extends StatefulWidget {
 class _TodayScreenState extends State<TodayScreen> {
   double screenHeight = 0;
   double screenWidth = 0;
+
+  String checkIn = "--/--";
+  String checkOut = "--/--";
+
   Color primary = Color(0xFF176B87);
+
+  @override
+  void initState() {
+    super.initState();
+    _getRecord();
+  }
+
+  void _getRecord() async {
+    try {
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection("NIM").where('id', isEqualTo: User.username).get();
+
+      DocumentSnapshot querySnapshot2 = await FirebaseFirestore.instance.collection("NIM").doc(querySnapshot.docs[0].id).collection("Record")
+          .doc(DateFormat('dd MMMM yyyy').format(DateTime.now()))
+          .get();
+
+      setState(() {
+        checkIn = querySnapshot2['checkIn'];
+        checkOut = querySnapshot2['checkOut'];
+      });
+
+    } catch (e) {
+      setState(() {
+        checkIn = "--/--";
+        checkOut = "--/--";
+      });
+    }
+    print(checkIn);
+    print(checkOut);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +65,7 @@ class _TodayScreenState extends State<TodayScreen> {
               alignment: Alignment.centerLeft,
               margin: const EdgeInsets.only(top: 32),
               child: Text(
-                "Welcome",
+                "NIM",
                 style: TextStyle(
                   color: Colors.black26,
                   fontFamily: "font_2",
@@ -38,7 +76,8 @@ class _TodayScreenState extends State<TodayScreen> {
             Container(
               alignment: Alignment.centerLeft,
               child: Text(
-                "NIM",
+                User.username,
+
                 style: TextStyle(
                   fontFamily: "font_2",
                   fontSize: screenWidth / 10,
@@ -89,7 +128,7 @@ class _TodayScreenState extends State<TodayScreen> {
                           ),
                         ),
                         Text(
-                          "09:30",
+                          checkIn,
                           style: TextStyle(
                             fontFamily: "font_2",
                             fontSize: screenWidth / 15,
@@ -113,7 +152,7 @@ class _TodayScreenState extends State<TodayScreen> {
                           ),
                         ),
                         Text(
-                          "--/--",
+                          checkOut,
                           style: TextStyle(
                             fontFamily: "font_2",
                             fontSize: screenWidth / 15,
@@ -130,7 +169,7 @@ class _TodayScreenState extends State<TodayScreen> {
               alignment: Alignment.centerLeft,
               child: RichText(
                 text: TextSpan(
-                  text: "13",
+                  text: DateTime.now().day.toString(),
                   style: TextStyle(
                     color: primary,
                     fontSize: screenWidth / 15,
@@ -138,7 +177,7 @@ class _TodayScreenState extends State<TodayScreen> {
                   ),
                   children: [
                     TextSpan(
-                      text: " September 2023",
+                      text: DateFormat(' MMMM yyyy').format(DateTime.now()),
                       style: TextStyle(
                         color: Colors.black,
                         fontSize: screenWidth / 15,
@@ -149,38 +188,100 @@ class _TodayScreenState extends State<TodayScreen> {
                 ),
               ),
             ),
-            Container(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "12:00:02 PM",
-                style: TextStyle(
-                  fontFamily: "font_2",
-                  fontSize: screenWidth / 20,
-                  color: Colors.black26,
-                ),
-              ),
+            StreamBuilder(
+              stream: Stream.periodic(const Duration(seconds: 1)),
+              builder: (context, snapshot) {
+                return Container(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    DateFormat('hh:mm:ss a').format(DateTime.now()),
+                    style: TextStyle(
+                      fontFamily: "font_2",
+                      fontSize: screenWidth / 20,
+                      color: Colors.black26,
+                    ),
+                  ),
+                );
+              }
             ),
-            Container(
+            checkOut == "--/--" ? Container(
               margin: const EdgeInsets.only(top : 20),
               child: Builder(
                 builder: (context) {
                   final GlobalKey<SlideActionState> key = GlobalKey();
 
                   return SlideAction(
-                    text: "Slide to Check Out",
+                    text: checkIn == "--/--" ? "Slide to checkIn" : "Slide to checkOut",
                     textStyle: TextStyle(
                       color: Colors.black,
                     ),
                     outerColor: Colors.white,
                     innerColor: primary,
                     key: key,
-                    onSubmit: () {
+
+                  onSubmit: () async {
+
+                      // key.currentState!.reset();
+
+                    Timer(Duration(seconds: 1), () {
                       key.currentState!.reset();
-                    },
-                  );
+                    });
+
+                      print(DateFormat('hh:mm').format(DateTime.now()));
+
+                      QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection("NIM").where('id', isEqualTo: User.username).get();
+
+                      print(querySnapshot.docs[0].id);
+                      print(DateFormat('dd MMMM yyyy').format(DateTime.now()));
+
+                      DocumentSnapshot querySnapshot2 = await FirebaseFirestore.instance.collection("NIM").doc(querySnapshot.docs[0].id).collection("Record")
+                          .doc(DateFormat('dd MMMM yyyy').format(DateTime.now()))
+                          .get();
+
+                      try {
+                        // if(querySnapshot2['checkIn']);
+                        String checkIn = querySnapshot2['checkIn'];
+
+                        setState(() {
+                          checkOut = DateFormat('hh:mm').format(DateTime.now());
+                        });
+
+                        await FirebaseFirestore .instance.collection("NIM").doc(querySnapshot.docs[0].id).collection("Record")
+                            .doc(DateFormat('dd MMMM yyyy').format(DateTime.now())).update({
+                          'checkIn' : checkIn,
+                          'checkOut' : DateFormat('hh:mm').format(DateTime.now())
+                        });
+
+                      } catch (e) {
+
+                        setState(() {
+                          checkIn = DateFormat('hh:mm').format(DateTime.now());
+                        });
+                        await FirebaseFirestore .instance.collection("NIM").doc(querySnapshot.docs[0].id).collection("Record")
+                            .doc(DateFormat('dd MMMM yyyy').format(DateTime.now())).set({
+                          'checkIn' : DateFormat('hh:mm').format(DateTime.now()),
+                        });
+                      }
+                      
+                      // print(querySnapshot2['checkIn']);
+
+                      print("Database Firebase terpanggil: ${querySnapshot.docs.length}");
+
+                  // key.currentState!.reset();
+                  });
                 },
               ),
-            ),
+            ) : Container(
+              margin: const EdgeInsets.only(top: 30),
+              child: Text("You have completed this day",
+                style: TextStyle(
+                  fontFamily: "font_2",
+                  fontSize: screenWidth / 20,
+                  color: Colors.black26,
+                ),
+              ),
+
+            )
           ],
         ),
       ),

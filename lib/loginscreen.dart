@@ -22,14 +22,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    screenHeight = MediaQuery
-        .of(context)
-        .size
-        .height;
-    screenWidth = MediaQuery
-        .of(context)
-        .size
-        .width;
+    screenHeight = MediaQuery.of(context).size.height;
+    screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: SingleChildScrollView(
@@ -74,67 +68,62 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   fieldTitle("Masukan NIM"),
-                  customField("Masukan NIM kamu", idController, false),
+                  customField("Masukan NIM kamu", idController),
                   fieldTitle("Masukan password"),
                   customPasswordField("Masukan password kamu", passController),
+                  GestureDetector(
+                    onTap: () async {
+                      String id = idController.text.trim();
+                      String password = passController.text.trim();
 
-                  // Gunakan customPasswordField
-              GestureDetector(
-                onTap: () async {
+                      if (id.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text("NIM tidak boleh kosong"),
+                        ));
+                      } else if (password.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text("Password tidak boleh kosong"),
+                        ));
+                      } else {
+                        QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection("NIM").where('id', isEqualTo: id).get();
 
-                  String id = idController.text.trim(); // Mengambil nilai ID sebagai string
-                  String password = passController.text.trim(); // Mengambil password sebagai string
+                        print("Database Firebase terpanggil: ${querySnapshot.docs.length}");
 
-                  if (id.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text("NIM tidak boleh kosong"),
-                    ));
-                  } else if (password.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text("Password tidak boleh kosong"),
-                    ));
-                  } else {
-                    QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection("NIM").where('id', isEqualTo: id).get();
+                        for (var document in querySnapshot.docs) {
+                          print("ID: ${document['id']}, Password: ${document['password']}");
+                        }
 
-                    print("Database Firebase terpanggil: ${querySnapshot.docs.length}");
+                        if (querySnapshot.docs.isNotEmpty) {
+                          try {
+                            var firstDocumentData = querySnapshot.docs[0].data() as Map<String, dynamic>;
+                            var hashedPasswordFromDatabase = firstDocumentData['password'];
 
-                  // Cetak data dari setiap dokumen
-                    for (var document in querySnapshot.docs) {
-                      print("ID: ${document['id']}, Password: ${document['password']}");
-                    }
+                            if (password == hashedPasswordFromDatabase) {
+                              print("Password cocok, lanjutkan");
 
-                    if (querySnapshot.docs.isNotEmpty) {
-                      try {
-                        var firstDocumentData = querySnapshot.docs[0].data() as Map<String, dynamic> ;
-                        var hashedPasswordFromDatabase = firstDocumentData['password'];
-
-                        if (password == hashedPasswordFromDatabase) {
-                          print("Password cocok, lanjutkan");
-
-                          sharedPreferences = await SharedPreferences.getInstance();
-                          sharedPreferences.setString("NimId", id).then((_){
-                            Navigator.pushReplacement(context,
-                                MaterialPageRoute(builder: (context) => HomeScreen())); // pindah navigasi ke homescreen
-                          });
+                              sharedPreferences = await SharedPreferences.getInstance();
+                              sharedPreferences.setString("NimId", id).then((_){
+                                Navigator.pushReplacement(context,
+                                    MaterialPageRoute(builder: (context) => HomeScreen()));
+                              });
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                                content: Text("Periksa kembali password kamu"),
+                              ));
+                            }
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text("Terjadi kesalahan: ${e.toString()}"),
+                            ));
+                          }
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                            content: Text("Periksa kembali password kamu"),
+                            content: Text("Periksa lagi Nim kamu"),
                           ));
                         }
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text("Terjadi kesalahan: ${e.toString()}"),
-                        ));
                       }
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text("Periksa lagi Nim kamu"),
-                      ));
-                    }
-                  }
-                },
-
-              child: Container(
+                    },
+                    child: Container(
                       height: 60,
                       width: screenWidth,
                       margin: EdgeInsets.only(top: screenHeight / 40),
@@ -177,8 +166,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget customField(String hint, TextEditingController controller,
-      bool obscureText) {
+  Widget customField(String hint, TextEditingController controller) {
     return Container(
       width: screenWidth,
       margin: EdgeInsets.only(bottom: screenHeight / 40),
@@ -206,10 +194,8 @@ class _LoginScreenState extends State<LoginScreen> {
           Expanded(
             child: Padding(
               padding: EdgeInsets.only(right: screenWidth / 12),
-              child: TextFormField(
+              child: TextField(
                 controller: controller,
-                enableSuggestions: false,
-                autocorrect: false,
                 decoration: InputDecoration(
                   contentPadding: EdgeInsets.symmetric(
                     vertical: screenHeight / 30,
@@ -218,7 +204,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   hintText: hint,
                 ),
                 maxLines: 1,
-                obscureText: obscureText, // Gunakan nilai dari parameter
               ),
             ),
           ),
@@ -255,10 +240,8 @@ class _LoginScreenState extends State<LoginScreen> {
           Expanded(
             child: Padding(
               padding: EdgeInsets.only(right: screenWidth / 12),
-              child: TextFormField(
+              child: TextField(
                 controller: controller,
-                enableSuggestions: false,
-                autocorrect: false,
                 decoration: InputDecoration(
                   contentPadding: EdgeInsets.symmetric(
                     vertical: screenHeight / 30,
@@ -267,7 +250,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   hintText: hint,
                 ),
                 maxLines: 1,
-                obscureText: obscure, // Gunakan nilai dari parameter
               ),
             ),
           ),
@@ -276,7 +258,8 @@ class _LoginScreenState extends State<LoginScreen> {
             child: GestureDetector(
               onTap: () {
                 setState(() {
-                  obscure = !obscure;
+                  obscure =
+                  !obscure;
                 });
               },
               child: Container(

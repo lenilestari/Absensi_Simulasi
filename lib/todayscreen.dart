@@ -30,7 +30,7 @@ class _TodayScreenState extends State<TodayScreen> {
 
   void _getRecord() async {
     try {
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection("NIM").where('id', isEqualTo: User.username).get();
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection("NIM").where('id', isEqualTo: User.usernameId).get();
 
       DocumentSnapshot querySnapshot2 = await FirebaseFirestore.instance.collection("NIM").doc(querySnapshot.docs[0].id).collection("Record")
           .doc(DateFormat('dd MMMM yyyy').format(DateTime.now()))
@@ -76,8 +76,7 @@ class _TodayScreenState extends State<TodayScreen> {
             Container(
               alignment: Alignment.centerLeft,
               child: Text(
-                User.username,
-
+                User.usernameId,
                 style: TextStyle(
                   fontFamily: "font_2",
                   fontSize: screenWidth / 10,
@@ -221,15 +220,19 @@ class _TodayScreenState extends State<TodayScreen> {
 
                   onSubmit: () async {
 
-                      // key.currentState!.reset();
+                    //
+                    // Timer(Duration(seconds: 1), () {
+                    //   key.currentState!.reset();
+                    // });
 
-                    Timer(Duration(seconds: 1), () {
-                      key.currentState!.reset();
-                    });
+                    // Future.delayed(Duration(milliseconds: 500), (){
+                    //   key.currentState!.reset();
+                    //
+                    // });
 
                       print(DateFormat('hh:mm').format(DateTime.now()));
 
-                      QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection("NIM").where('id', isEqualTo: User.username).get();
+                      QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection("NIM").where('id', isEqualTo: User.usernameId).get();
 
                       print(querySnapshot.docs[0].id);
                       print(DateFormat('dd MMMM yyyy').format(DateTime.now()));
@@ -246,8 +249,9 @@ class _TodayScreenState extends State<TodayScreen> {
                           checkOut = DateFormat('hh:mm').format(DateTime.now());
                         });
 
-                        await FirebaseFirestore .instance.collection("NIM").doc(querySnapshot.docs[0].id).collection("Record")
+                        await FirebaseFirestore.instance.collection("NIM").doc(querySnapshot.docs[0].id).collection("Record")
                             .doc(DateFormat('dd MMMM yyyy').format(DateTime.now())).update({
+                          'date' : Timestamp.now(),
                           'checkIn' : checkIn,
                           'checkOut' : DateFormat('hh:mm').format(DateTime.now())
                         });
@@ -257,11 +261,15 @@ class _TodayScreenState extends State<TodayScreen> {
                         setState(() {
                           checkIn = DateFormat('hh:mm').format(DateTime.now());
                         });
-                        await FirebaseFirestore .instance.collection("NIM").doc(querySnapshot.docs[0].id).collection("Record")
+                        await FirebaseFirestore.instance.collection("NIM").doc(querySnapshot.docs[0].id).collection("Record")
                             .doc(DateFormat('dd MMMM yyyy').format(DateTime.now())).set({
+                          'date' : Timestamp.now(),
                           'checkIn' : DateFormat('hh:mm').format(DateTime.now()),
+                          'checkOut' : "--/--",
                         });
                       }
+
+                      key.currentState!.reset();
                       
                       // print(querySnapshot2['checkIn']);
 

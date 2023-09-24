@@ -4,6 +4,7 @@ import 'package:absensi_simulasi_mmtc_20/model/user.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
+import 'package:month_year_picker/month_year_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> main() async {
@@ -29,6 +30,10 @@ class MyApp extends StatelessWidget {
       home: const KeyboardVisibilityProvider(
         child: const AuthCheck(),
       ),
+
+      localizationsDelegates: const [
+        MonthYearPickerLocalizations.delegate,
+      ] ,
     );
   }
 }
@@ -59,7 +64,7 @@ class _AuthCheckState extends State<AuthCheck> {
       if(sharedPreferences.getString('NimId') != null) {
         setState(() {
 
-          User.username = sharedPreferences.getString('NimId')!;
+          User.usernameId = sharedPreferences.getString('NimId')!;
         userAvailable = true;
         });
       }

@@ -1,5 +1,7 @@
+import 'package:absensi_simulasi_mmtc_20/model/user.dart';
 import 'package:absensi_simulasi_mmtc_20/profilescreen.dart';
 import 'package:absensi_simulasi_mmtc_20/todayscreen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -16,6 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   double screenHeight = 0;
   double screenWidth = 0;
 
+
   Color primary = Color(0xFF176B87);
 
   int currentIndex = 1;
@@ -27,6 +30,23 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+
+    getId();
+  }
+
+  void getId() async {
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+        .collection("NIM").where('id', isEqualTo: User.usernameId).get();
+
+    setState(() {
+      User.id = querySnapshot.docs[0].id;
+    });
+  }
+
+
+  @override
   Widget build(BuildContext context) {
     screenHeight = MediaQuery.of(context).size.height;
     screenWidth = MediaQuery.of(context).size.width;
@@ -34,10 +54,10 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       body: IndexedStack(
         index: currentIndex,
-        children: const [
-          CalenderScreen(),
-          TodayScreen(),
-          ProfileScreen(),
+        children: [
+          new CalenderScreen(),
+          new TodayScreen(),
+          new ProfileScreen(),
         ],
       ),
       bottomNavigationBar: Container(

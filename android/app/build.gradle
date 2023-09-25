@@ -42,33 +42,37 @@ android {
         main.java.srcDirs += 'src/main/kotlin'
     }
 
-    defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId "com.example.absensi_simulasi_mmtc_20"
-        minSdkVersion 21
-        targetSdkVersion 33
-        versionCode flutterVersionCode.toInteger()
-        versionName flutterVersionName
-    }
+    android {
+        compileSdkVersion 33
+//
+//        lintOptions {
+//            disable 'InvalidPackage'
+        }
 
-    buildTypes {
-        release {
-            // TODO: Add your own signing config for the release build.
+        defaultConfig {
+            applicationId "com.example.absensi_simulasi_mmtc_20"
+            minSdkVersion 21
+            targetSdkVersion 33
+            versionCode flutterVersionCode.toInteger()
+            versionName flutterVersionName
+        }
 
-            signingConfig signingConfigs.debug
+        buildTypes {
+            release {
+                signingConfig signingConfigs.debug
+            }
         }
     }
-}
 
-flutter {
-    source '../..'
-}
+    flutter {
+        source '../..'
+    }
 
-dependencies {
-    //firebase
-    implementation platform('com.google.firebase:firebase-bom:32.3.1')
-    implementation 'com.google.firebase:firebase-analytics-ktx'
+    dependencies {
+        //firebase
+        implementation platform('com.google.firebase:firebase-bom:32.3.1')
+        implementation 'com.google.firebase:firebase-analytics-ktx'
 
-    //kotlin
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-}
+        //kotlin
+        implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    }

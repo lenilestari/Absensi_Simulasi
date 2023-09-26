@@ -76,7 +76,7 @@ class _TodayScreenState extends State<TodayScreen> {
               alignment: Alignment.centerLeft,
               margin: const EdgeInsets.only(top: 32),
               child: Text(
-                "NIM",
+                "Welcome",
                 style: TextStyle(
                   color: Colors.black26,
                   fontFamily: "font_2",
@@ -90,25 +90,25 @@ class _TodayScreenState extends State<TodayScreen> {
                 User.usernameId,
                 style: TextStyle(
                   fontFamily: "font_2",
-                  fontSize: screenWidth / 10,
-                ),
-              ),
-            ),
-            Container(
-              alignment: Alignment.centerLeft,
-              margin: const EdgeInsets.only(top: 32),
-              child: Text(
-                "Status absen hari ini",
-                style: TextStyle(
-                  color: Colors.black,
-                  fontFamily: "font_2",
                   fontSize: screenWidth / 15,
                 ),
               ),
             ),
             Container(
-              margin: EdgeInsets.only(top: 15, bottom: 30),
-              height: 150,
+              alignment: Alignment.centerLeft,
+              margin: const EdgeInsets.only(top: 28),
+              child: Text(
+                "Status absen hari ini",
+                style: TextStyle(
+                  color: Colors.black,
+                  fontFamily: "font_2",
+                  fontSize: screenWidth / 18,
+                ),
+              ),
+            ),
+            Container(
+              margin: EdgeInsets.only(top: 15, bottom: 25),
+              height: 120,
               decoration: const BoxDecoration(
                 color: Colors.white,
                 boxShadow: [
@@ -221,7 +221,7 @@ class _TodayScreenState extends State<TodayScreen> {
                   final GlobalKey<SlideActionState> key = GlobalKey();
 
                   return SlideAction(
-                    text: checkIn == "--/--" ? "Slide to checkIn" : "Slide to checkOut",
+                    text: checkIn == "--/--" ? "Slide to check in" : "Slide to check out",
                     textStyle: TextStyle(
                       color: Colors.black,
                     ),
@@ -269,7 +269,7 @@ class _TodayScreenState extends State<TodayScreen> {
                           'date' : Timestamp.now(),
                           'checkIn' : checkIn,
                           'checkOut' : DateFormat('hh:mm').format(DateTime.now()),
-                          'location' : location,
+                          'CheckInLocation' : location,
 
                         });
 
@@ -283,7 +283,7 @@ class _TodayScreenState extends State<TodayScreen> {
                           'date' : Timestamp.now(),
                           'checkIn' : DateFormat('hh:mm').format(DateTime.now()),
                           'checkOut' : "--/--",
-                          'location' : location,
+                          'CheckOutLocation' : location,
                         });
                       }
 
@@ -321,7 +321,7 @@ class _TodayScreenState extends State<TodayScreen> {
                             'date' : Timestamp.now(),
                             'checkIn' : checkIn,
                             'checkOut' : DateFormat('hh:mm').format(DateTime.now()),
-                            'location' : location,
+                            'CheckInLocation' : location,
 
                           });
 
@@ -335,7 +335,7 @@ class _TodayScreenState extends State<TodayScreen> {
                             'date' : Timestamp.now(),
                             'checkIn' : DateFormat('hh:mm').format(DateTime.now()),
                             'checkOut' : "--/--",
-                            'location' : location,
+                            'CheckOutLocation' : location,
                           });
                         }
 

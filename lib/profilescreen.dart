@@ -1,6 +1,14 @@
+import 'dart:ffi';
+import 'dart:io';
+
 import 'package:absensi_simulasi_mmtc_20/model/user.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -16,6 +24,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Color primary = Color(0xFF176B87);
   String birth = "Date of Birth";
 
+  TextEditingController firstName = TextEditingController();
+  TextEditingController lastName = TextEditingController();
+  TextEditingController addressName = TextEditingController();
+
+  void pickUploadProfilePic() async {
+    final image = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 512,
+      maxHeight: 512,
+      imageQuality: 90,
+    );
+
+    Reference ref = FirebaseStorage.instance.ref().child("${User.usernameId.toLowerCase()}_profilejpg");
+
+    await ref.putFile(File(image!.path));
+
+    ref.getDownloadURL().then((value) {
+      setState(() {
+        User.profilePickLink = value;
+      });
+    });
+
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
     screenHeight = MediaQuery.of(context).size.height;
@@ -26,27 +60,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.all(20),
         child: Column(
         children: [
-          Container(
-            margin: const EdgeInsets.only(top: 80, bottom: 25),
-            height: 120,
-            width: 120,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-              color: primary,
-            ),
-            child: Center(
-              child: Icon(
-                Icons.person,
-                color: Colors.white,
-                size: 80,
+          GestureDetector(
+            onTap: () {
+              pickUploadProfilePic();
+            },
+            child: Container(
+              margin: const EdgeInsets.only(top: 80, bottom: 25),
+              height: 120,
+              width: 120,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                color: primary,
+              ),
+              child: Center(
+                child: User.profilePickLink == " " ? const Icon(
+                  Icons.person,
+                  color: Colors.white,
+                  size: 80,
+                ) : Image.network(User.profilePickLink),
               ),
             ),
           ),
           Align(
             alignment: Alignment.center,
             child: Text("Nama ${User.usernameId}",
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: "font_2",
                 fontSize: 18,
 
@@ -54,8 +93,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 24,),
-          textField("First Name", "Firt Name"),
-          textField("Last Name", "Last Name"),
+          textField("First Name", "Firt Name", firstName),
+          textField("Last Name", "Last Name", lastName),
 
           const Align(
             alignment: Alignment.centerLeft,
@@ -69,7 +108,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
 
           GestureDetector (
-
             onTap: () {
               showDatePicker(
                   context: context,
@@ -139,14 +177,71 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           ),
-          textField("Address", "Address"),
+          textField("Address", "Address",addressName),
+
+          GestureDetector(
+            onTap: () async {
+              String namaPertama = firstName.text;
+              String namaKedua = lastName.text;
+              String ulangTahun = birth;
+              String Alamat = addressName.text;
+
+              if (User.canEdit) {
+                if(namaPertama.isEmpty) {
+                  showSnackBar("Please enter your first name!");
+                } else if (namaKedua.isEmpty) {
+                  showSnackBar("Please enter your last name!");
+                } else if (ulangTahun.isEmpty){
+                  showSnackBar("Please enter your birth date!");
+
+                } else if (Alamat.isEmpty) {
+                  showSnackBar("Please enter your address!");
+                } else {
+                  await FirebaseFirestore.instance.collection("NIM").doc(User.id).update({
+
+                    'firstName' : namaPertama,
+                    'lastName' : namaKedua,
+                    'birtDate' : ulangTahun,
+                    'address' : Alamat,
+                    'canEdit' : false,
+
+                  });
+                }
+              } else {
+                
+                showSnackBar("You can't edit anymore, please contact support team");
+              }
+              
+
+            },
+            child: Container(
+              height: kToolbarHeight,
+              width: screenWidth,
+              margin: const EdgeInsets.only(bottom: 12),
+
+              decoration :  BoxDecoration(
+                  borderRadius: BorderRadius.circular(5),
+                color: primary,
+              ),
+              child: const Center(
+                child: Text(
+                  "SAVE",
+                  style : TextStyle(
+                    color: Colors.white,
+                    fontFamily: "font_2",
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
       ),
     );
   }
 
-  Widget textField(String hint, String title) {
+  Widget textField(String hint, String title, TextEditingController controller) {
     return Column(
       children: [
         Align(
@@ -162,6 +257,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Container(
           margin: const EdgeInsets.only(bottom: 12,),
           child: TextFormField(
+            controller: controller,
             cursorColor: Colors.black26,
             maxLines: 1,
             decoration: InputDecoration(
@@ -184,6 +280,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  void showSnackBar (String text) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+          content: Text(
+        text,
+      ),
+      ),
     );
   }
 }

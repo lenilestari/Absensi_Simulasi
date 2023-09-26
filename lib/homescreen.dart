@@ -33,10 +33,21 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-
     _startLocationServices();
-
+    _createCredentials();
     getId();
+  }
+
+  void _createCredentials() async {
+    DocumentSnapshot doc = await FirebaseFirestore.instance.collection("NIM").doc(User.id).get();
+    setState(() {
+      User.canEdit = doc ['canEdit'];
+      User.firstName = doc ['firstName'];
+      User.lastName = doc ['lastName'];
+      User.birthDate = doc ['birtDate'];
+      User.address = doc ['address'];
+
+    });
   }
 
   void _startLocationServices() async {
